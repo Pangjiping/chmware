@@ -12,68 +12,57 @@ import (
 	"testing"
 	"testing/quick"
 	"time"
+
 	"github.com/stretchr/testify/require"
 )
 
-func checkNum(num, expected int, t *testing.T) {
-	if num != expected {
-		t.Errorf("got %d, expected %d", num, expected)
-	}
-}
-
 func TestNew(t *testing.T) {
 	x := NewConsistent()
-	require.
-	if x == nil {
-		t.Errorf("expected obj")
-	}
-	checkNum(x.NumberOfReplicas, 20, t)
+	require.NotNil(t, x)
+	require.Equal(t, 20, x.NumberOfReplicas)
 }
 
 func TestAdd(t *testing.T) {
 	x := NewConsistent()
+	require.NotNil(t, x)
 	x.Add("abcdefg")
-	checkNum(len(x.circle), 20, t)
-	checkNum(len(x.sortedHashes), 20, t)
-	if sort.IsSorted(x.sortedHashes) == false {
-		t.Errorf("expected sorted hashes to be sorted")
-	}
+	require.Equal(t, 20, len(x.circle))
+	require.Equal(t, 20, len(x.sortedHashes))
+	require.Equal(t, true, sort.IsSorted(x.sortedHashes))
+
 	x.Add("qwer")
-	checkNum(len(x.circle), 40, t)
-	checkNum(len(x.sortedHashes), 40, t)
-	if sort.IsSorted(x.sortedHashes) == false {
-		t.Errorf("expected sorted hashes to be sorted")
-	}
+	require.Equal(t, 40, len(x.circle))
+	require.Equal(t, 40, len(x.sortedHashes))
+	require.Equal(t, true, sort.IsSorted(x.sortedHashes))
 }
 
 func TestRemove(t *testing.T) {
 	x := NewConsistent()
+	require.NotNil(t, x)
 	x.Add("abcdefg")
 	x.Remove("abcdefg")
-	checkNum(len(x.circle), 0, t)
-	checkNum(len(x.sortedHashes), 0, t)
+	require.Equal(t, 0, len(x.circle))
+	require.Equal(t, 0, len(x.sortedHashes))
 }
 
 func TestRemoveNonExisting(t *testing.T) {
 	x := NewConsistent()
+	require.NotNil(t, x)
 	x.Add("abcdefg")
 	x.Remove("abcdefghijk")
-	checkNum(len(x.circle), 20, t)
+	require.Equal(t, 20, len(x.circle))
 }
 
 func TestGetEmpty(t *testing.T) {
 	x := NewConsistent()
+	require.NotNil(t, x)
 	_, err := x.Get("asdfsadfsadf")
-	if err == nil {
-		t.Errorf("expected error")
-	}
-	if err != ErrEmptyCircle {
-		t.Errorf("expected empty circle error")
-	}
+	require.Equal(t, ErrEmptyCircle, err)
 }
 
 func TestGetSingle(t *testing.T) {
 	x := NewConsistent()
+	require.NotNil(t, x)
 	x.Add("abcdefg")
 	f := func(s string) bool {
 		y, err := x.Get(s)
