@@ -1,4 +1,4 @@
-module github.com/Pangjiping/chmware
+module github.com/Pangjiping/raftdb-client
 
 go 1.17
 
