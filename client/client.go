@@ -3,7 +3,7 @@ package client
 import (
 	"sync"
 
-	"github.com/Pangjiping/chmware/hash"
+	"github.com/Pangjiping/raftdb-client/hash"
 )
 
 type Client struct {
