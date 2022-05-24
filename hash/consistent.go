@@ -9,6 +9,8 @@ import (
 	"sync"
 )
 
+const DefaultNumberOfReplicas = 20
+
 // ErrEmptyCircle is the error returned when trying to get an element when nothing has been added to hash.
 var ErrEmptyCircle = errors.New("empty circle")
 
@@ -26,9 +28,9 @@ type Consistent struct {
 
 // NewConsistent creates a new Consistent object with a default setting of 20 replicas for each entry.
 // To change the number of replicas, set NumberOfReplicas before adding entries.
-func NewConsistent() *Consistent {
+func NewConsistent(numberOfReplicas int) *Consistent {
 	c := new(Consistent)
-	c.NumberOfReplicas = 20
+	c.NumberOfReplicas = numberOfReplicas
 	c.circle = make(map[uint32]string)
 	c.members = make(map[string]bool)
 	return c
