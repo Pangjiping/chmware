@@ -51,9 +51,5 @@ func (c *Client) RegisterInstance(nodeList []Node) error {
 	if err := parseNodeList(nodeList); err != nil {
 		return err
 	}
-
-	if err := tryConn(tryKey, tryVal); err != nil {
-		return err
-	}
 	return nil
 }

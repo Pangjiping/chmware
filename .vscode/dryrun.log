@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/pangjiping/gopath/src/github.com/Pangjiping/raftdb-client'
+rm -f ./*.out
+go test ./hash -v -run=Test -timeout=10m -cover -coverprofile consistent_test.out
+make: Leaving directory `/Users/pangjiping/gopath/src/github.com/Pangjiping/raftdb-client'
+ 

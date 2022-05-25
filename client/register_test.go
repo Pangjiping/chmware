@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func getNodeList() []Node {
@@ -72,4 +73,46 @@ func TestParseNodeList(t *testing.T) {
 
 	// invalid ip address
 	// todo
+}
+
+func TestIsIP(t *testing.T) {
+	validIP := "127.0.0.1"
+	invalidIPOne := "1.1.1"
+	invalidIPTwo := "0.1.1.1"
+	invalidIPThree := "9.0.0.566"
+	invalidIPFour := "a.b.c.d"
+
+	valid := isIP(validIP)
+	require.Equal(t, true, valid)
+
+	valid = isIP(invalidIPOne)
+	require.Equal(t, false, valid)
+
+	valid = isIP(invalidIPTwo)
+	require.Equal(t, false, valid)
+
+	valid = isIP(invalidIPThree)
+	require.Equal(t, false, valid)
+
+	valid = isIP(invalidIPFour)
+	require.Equal(t, false, valid)
+}
+
+func TestCheckAddress(t *testing.T) {
+	validAddress := "127.0.0.1:3306"
+	invalidAddressOne := "127.0.0.1:99999"
+	invalidAddressTwo := "127.0.0.1:"
+	invalidAddressThree := "127.0.0.256:11"
+
+	valid := checkAddress(validAddress)
+	require.Equal(t, true, valid)
+
+	valid = checkAddress(invalidAddressOne)
+	require.Equal(t, false, valid)
+
+	valid = checkAddress(invalidAddressTwo)
+	require.Equal(t, false, valid)
+
+	valid = checkAddress(invalidAddressThree)
+	require.Equal(t, false, valid)
 }

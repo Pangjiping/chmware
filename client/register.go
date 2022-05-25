@@ -1,6 +1,10 @@
 package client
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 // Node is node information.
 // A node has many replicas by raft.
@@ -33,14 +37,21 @@ func parseNodeList(nodeList []Node) error {
 		}
 		nodeMaps[nodeInfo.NodeID] = make([]string, 0)
 		for _, addr := range nodeInfo.NodeAddress {
-			// todo: 判断一个合法的IP地址 报错
+			// 判断是否是合法的ip地址
 			if !checkAddress(addr) {
 				return fmt.Errorf("invalid IP address: %s", addr)
 			}
 
+			// 判断是否是唯一的ip地址
 			if !checkAddrUnique(addr) {
-				return fmt.Errorf("the same IP address already exists, Address: %s", addr)
+				return fmt.Errorf("the same IP address already exists, address: %s", addr)
 			}
+
+			// 尝试通信，是否成功
+			if err := tryConn(tryKey, tryVal, addr); err != nil {
+				return fmt.Errorf("cannot connect server, address: %s", addr)
+			}
+
 			nodeMaps[nodeInfo.NodeID] = append(nodeMaps[nodeInfo.NodeID], addr)
 		}
 	}
@@ -54,6 +65,81 @@ func init() {
 }
 
 func checkAddress(address string) bool {
+	// 按:拆分字符串，是否是两个
+	ipAndPort := strings.Split(address, ":")
+	if len(ipAndPort) != 2 {
+		return false
+	}
+
+	// 按ip地址和端口号单独判断
+	if !isIP(ipAndPort[0]) || !isPort(ipAndPort[1]) {
+		return false
+	}
+
+	return true
+}
+
+func isIP(ip string) bool {
+	if len(ip) == 0 {
+		return false
+	}
+
+	if len(ip) < 7 || len(ip) > 15 {
+		return false
+	}
+
+	if ip[0] == '.' || ip[len(ip)-1] == '.' {
+		return false
+	}
+
+	// 按 . 分割字符串出来四个
+	ss := strings.Split(ip, ".")
+	if len(ss) != 4 {
+		return false
+	}
+
+	for _, s := range ss {
+		// 不是一个字符不能以0开头
+		if len(s) > 1 && s[0] == '0' {
+			return false
+		}
+
+		// 判断每个字符是否是0-9
+		for i := 0; i < len(s); i++ {
+			if s[i] < '0' || s[i] > '9' {
+				return false
+			}
+		}
+	}
+
+	for i := 0; i < len(ss); i++ {
+		num, err := strconv.Atoi(ss[i])
+		if err != nil {
+			return false
+		}
+		if i == 0 {
+			if num < 1 || num > 255 {
+				return false
+			}
+		} else {
+			if num < 0 || num > 255 {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func isPort(port string) bool {
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		return false
+	}
+	if portNum < 0 || portNum > 65535 {
+		return false
+	}
+
 	return true
 }
 
@@ -73,6 +159,6 @@ func checkIDUnique(id string) bool {
 	return true
 }
 
-func tryConn(tryKey, tryVal string) error {
+func tryConn(addr string, tryKey, tryVal string) error {
 	return nil
 }
