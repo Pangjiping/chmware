@@ -160,5 +160,52 @@ func checkIDUnique(id string) bool {
 }
 
 func tryConn(addr string, tryKey, tryVal string) error {
+	// post
+	req := connRequest{
+		address: addr,
+		key:     tryKey,
+		value:   tryVal,
+		method:  METHOD_POST,
+	}
+	postResp := invoke(req)
+	if postResp.Error() != nil {
+		return postResp.Error()
+	}
+
+	// get
+	req = connRequest{
+		address: addr,
+		key:     tryKey,
+		method:  METHOD_GET,
+		value:   "",
+	}
+	getResp := invoke(req)
+	if getResp.Error() != nil {
+		return getResp.Error()
+	}
+
+	if getResp.Value() != tryVal {
+		return fmt.Errorf("something wrong in connect trying, address: %s", addr)
+	}
+
+	// delete
+	req = connRequest{
+		address: addr,
+		key:     tryKey,
+		method:  METHOD_DELETE,
+		value:   "",
+	}
+	delResp := invoke(req)
+	if delResp.Error() != nil {
+		return delResp.Error()
+	}
+
+	// get
+	req.method = METHOD_GET
+	reGetResp := invoke(req)
+	if reGetResp.Error() == nil || reGetResp.Value() != "" {
+		return fmt.Errorf("something wrong in connect trying, address: %s", addr)
+	}
+
 	return nil
 }

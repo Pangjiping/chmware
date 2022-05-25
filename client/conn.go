@@ -23,25 +23,38 @@ type connRequest struct {
 	value   string
 }
 
-type connResponse struct {
-	address   string
-	method    string
+type Response struct {
 	key       string
 	value     string
-	timestamp time.Time // 本次操作的时间
+	err       error
+	method    string
+	createdAt time.Time
 }
 
-type Response struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+func (r Response) Error() error {
+	return r.err
 }
 
-// todo 连接接口 http
+func (r Response) Value() string {
+	return r.value
+}
+
+func (r Response) Key() string {
+	return r.key
+}
+
+func (r Response) Timestamp() time.Time {
+	return r.createdAt
+}
+
+func (r Response) Method() string {
+	return r.method
+}
+
+// 连接接口 http
+// todo: 处理这个返回信息的格式，只保留value值
 func doGET(req connRequest) (string, error) {
-	url, err := buildURL(req)
-	if err != nil {
-		return "", err
-	}
+	url := fmt.Sprintf(`http://%s/key/%s`, req.address, req.key)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -57,10 +70,7 @@ func doGET(req connRequest) (string, error) {
 }
 
 func doPOST(req connRequest) error {
-	url, err := buildURL(req)
-	if err != nil {
-		return nil
-	}
+	url := fmt.Sprintf(`http://%s/key`, req.address)
 
 	b, err := json.Marshal(map[string]string{req.key: req.value})
 	if err != nil {
@@ -100,16 +110,49 @@ func doDELETE(req connRequest) error {
 // todo 连接配置信息
 
 // 构建请求链接
-func buildURL(req connRequest) (string, error) {
+// func buildURL(req connRequest) (string, error) {
+// 	method := req.method
+// 	switch method {
+// 	case METHOD_GET:
+// 		return fmt.Sprintf(`http://%s/key/%s`, req.address, req.key), nil
+// 	case METHOD_POST:
+// 		return fmt.Sprintf(`http://%s/key`, req.address), nil
+// 	case METHOD_DELETE:
+// 		return fmt.Sprintf(`http://%s/key/%s`, req.address, req.key), nil
+// 	default:
+// 		return "", fmt.Errorf("invalid request method: %s", req.method)
+// 	}
+// }
+
+func invoke(req connRequest) Response {
 	method := req.method
 	switch method {
 	case METHOD_GET:
-		return fmt.Sprintf(`http://%s/key/%s`, req.address, req.key), nil
+		value, err := doGET(req)
+		return Response{
+			key:   req.key,
+			value: value,
+			err:   err,
+		}
 	case METHOD_POST:
-		return fmt.Sprintf(`http://%s/key`, req.address), nil
+		err := doPOST(req)
+		return Response{
+			key:   req.key,
+			value: req.value,
+			err:   err,
+		}
 	case METHOD_DELETE:
-		return fmt.Sprintf(`http://%s/key/%s`, req.address, req.key), nil
+		err := doDELETE(req)
+		return Response{
+			key:   req.key,
+			value: req.value,
+			err:   err,
+		}
 	default:
-		return "", fmt.Errorf("invalid request method: %s", req.method)
+		return Response{
+			key:   "",
+			value: "",
+			err:   fmt.Errorf("invalid request method: $s", req.method),
+		}
 	}
 }
