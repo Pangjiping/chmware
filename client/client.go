@@ -1,7 +1,6 @@
 package client
 
 import (
-	"log"
 	"sync"
 
 	"github.com/Pangjiping/raftdb-client/hash"
@@ -15,41 +14,59 @@ const (
 type Client struct {
 	mu         sync.RWMutex
 	consistent *hash.Consistent
+	closed     bool
 }
 
-func NewClient(numberOfReplicas int) *Client {
-	if numberOfReplicas == 0 {
-		numberOfReplicas = hash.DefaultNumberOfReplicas
-	}
+func newClient() *Client {
 	return &Client{
 		mu:         sync.RWMutex{},
-		consistent: hash.NewConsistent(numberOfReplicas),
+		consistent: hash.NewConsistent(hash.DefaultNumberOfReplicas),
 	}
 }
 
 func (c *Client) Set(key string, value string) error {
+	if c.closed {
+		return ErrConnClosed
+	}
 	return nil
 }
 
 func (c *Client) Get(key string) (string, error) {
+	if c.closed {
+		return "", ErrConnClosed
+	}
 	return "", nil
 }
 
 func (c *Client) Delete(key string) error {
+	if c.closed {
+		return ErrConnClosed
+	}
 	return nil
 }
 
-func (c *Client) RegisterInstance(nodeList []Node) error {
-	if nodeList == nil || len(nodeList) == 0 {
-		return ErrEmptyNodeList
+func (c *Client) registerInstance() error {
+	if c.closed {
+		return ErrConnClosed
 	}
 
-	if len(nodeList) == 1 {
-		log.Printf("Only one kv instance is applied: %v", nodeList[0])
-	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	if err := parseNodeList(nodeList); err != nil {
-		return err
+	for nodeID, _ := range nodeMaps {
+		c.consistent.Add(nodeID)
 	}
 	return nil
+}
+
+// Close 关闭连接资源
+func (c *Client) close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.closed {
+		return
+	}
+
+	c.closed = true
 }

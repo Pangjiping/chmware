@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+func init() {
+	nodeMaps = make(NodeMaps)
+	uniqueID = make(map[string]bool)
+	uniqueIP = make(map[string]bool)
+}
+
 // Node is node information.
 // A node has many replicas by raft.
 type Node struct {
@@ -26,7 +32,7 @@ var uniqueIP map[string]bool
 // It will check validation of  NodeID and NodeAddress.
 func parseNodeList(nodeList []Node) error {
 	for _, nodeInfo := range nodeList {
-		if nodeInfo.NodeEnabled == false {
+		if !nodeInfo.NodeEnabled {
 			continue
 		}
 		if !checkIDUnique(nodeInfo.NodeID) {
@@ -53,15 +59,10 @@ func parseNodeList(nodeList []Node) error {
 			}
 
 			nodeMaps[nodeInfo.NodeID] = append(nodeMaps[nodeInfo.NodeID], addr)
+
 		}
 	}
 	return nil
-}
-
-func init() {
-	nodeMaps = make(NodeMaps)
-	uniqueID = make(map[string]bool)
-	uniqueIP = make(map[string]bool)
 }
 
 func checkAddress(address string) bool {
