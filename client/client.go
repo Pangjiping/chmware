@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/Pangjiping/raftdb-client/hash"
@@ -35,7 +36,28 @@ func (c *Client) Get(key string) (string, error) {
 	if c.closed {
 		return "", ErrConnClosed
 	}
-	return "", nil
+
+	// 得到节点实例信息
+	instance, err := c.consistent.Get(key)
+	if err != nil {
+		return "", err
+	}
+
+	// 启用负载均衡找到适合访问的ip地址
+	endpoints, ok := nodeMaps[instance]
+	if !ok {
+		return "", fmt.Errorf("cannot found instance for key: %s", key)
+	}
+
+	addr := loadBalance(endpoints)
+
+	resp := invoke(connRequest{
+		address: addr,
+		method:  METHOD_GET,
+		key:     key,
+	})
+
+	return resp.Value(), nil
 }
 
 func (c *Client) Delete(key string) error {

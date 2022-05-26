@@ -152,7 +152,7 @@ func invoke(req connRequest) Response {
 		return Response{
 			key:   "",
 			value: "",
-			err:   fmt.Errorf("invalid request method: $s", req.method),
+			err:   fmt.Errorf("invalid request method: %s", req.method),
 		}
 	}
 }
